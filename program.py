@@ -61,7 +61,12 @@ def db_config(filename='database.ini', section='postgresql'):
 
 def mask_pii(raw_str):
     b64_mask_str = base64.b64encode(raw_str.encode("utf-8"))
-    return b64_mask_str
+    return b64_mask_str.decode()
+
+def unmask_pii(encoded_str):
+    byte_str = bytes(encoded_str, 'utf-8')
+    raw_str = base64.b64decode(byte_str)
+    return raw_str.decode()
 
 if __name__ == '__main__':
     # CONSTANTS
@@ -78,6 +83,7 @@ if __name__ == '__main__':
         cur = conn.cursor()
     except:
         logger.error('Error in establishing connection to Postgres.')
+
     for msg in messages['Messages']:
         logger.info('Inserting message to PostGres...')
         msg_body = json.loads(msg['Body'])
@@ -99,4 +105,5 @@ if __name__ == '__main__':
         sql = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('user_logins', columns, placeholders)
         cur.execute(sql, list(msg_body.values()))
         conn.commit()
+        logger.info("Posted messages to Postgres server")
     cur.close()
